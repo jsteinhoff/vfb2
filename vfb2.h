@@ -23,17 +23,17 @@ struct vfb2_mode {
 struct vfb2_init {
 	__u32 vmem_len;
 	struct vfb2_mode *mode_table;
-	int (*vfb2_ioctl)(struct inode *inode, struct file *file,
-			  unsigned int cmd, unsigned long arg, int table_index);
+	int (*vfb2_ioctl)(unsigned int cmd, unsigned long arg,
+			  int table_index);
 	void *private;
 };
 
-int vfb2_register(struct vfb2_init *init);
-void vfb2_unregister(int table_index);
-int vfb2_current_mode(int table_index);
-void *vfb2_videomemory(int table_index);
-struct fb_info *vfb2_fb_info(int table_index);
-void *vfb2_private(int table_index);
+extern int vfb2_register(struct vfb2_init *init);
+extern void vfb2_unregister(int table_index);
+extern int vfb2_current_mode(int table_index);
+extern void *vfb2_videomemory(int table_index);
+extern struct fb_info *vfb2_fb_info(int table_index);
+extern void *vfb2_private(int table_index);
 
 #endif /* __KERNEL__ */
 

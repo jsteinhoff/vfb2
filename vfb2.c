@@ -16,7 +16,11 @@
  * based on drivers/video/vfb.c and drivers/usb/media/vicam.c (mmap function)
  */
 
+#include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,15)
 #include <linux/config.h>
+#endif
+
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/errno.h>
@@ -30,7 +34,6 @@
 #include <linux/rwsem.h>
 #include <asm/atomic.h>
 
-#include <linux/version.h>
 #include "vfb2.h"
 
 #if !defined(CONFIG_FB)
@@ -358,9 +361,14 @@ error:
 	return ret;
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,16)
 static int vfb2_ioctl(struct inode *inode, struct file *file,
 		      unsigned int cmd, unsigned long arg,
 		      struct fb_info *info)
+#else
+static int vfb2_ioctl(struct fb_info *info, unsigned int cmd,
+		      unsigned long arg)
+#endif
 {
 	struct vfb2_device *dev = vfb2_get_present_dev(info);
 	int ret = -ENODEV;
@@ -373,7 +381,7 @@ static int vfb2_ioctl(struct inode *inode, struct file *file,
 		goto error;
 
 	if (dev->init.vfb2_ioctl)
-		ret = dev->init.vfb2_ioctl(inode, file, cmd, arg,
+		ret = dev->init.vfb2_ioctl(cmd, arg,
 					   dev->table_index);
 	else
 		ret = -ENOIOCTLCMD;
@@ -382,8 +390,12 @@ error:
 	return ret;
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,16)
 static int vfb2_mmap(struct fb_info *info, struct file *file,
 		     struct vm_area_struct *vma)
+#else
+static int vfb2_mmap(struct fb_info *info, struct vm_area_struct *vma)
+# endif
 {
 	unsigned long page, pos;
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,10)
@@ -432,7 +444,7 @@ static struct fb_ops vfb2_ops = {
 	.fb_fillrect	= cfb_fillrect,
 	.fb_copyarea	= cfb_copyarea,
 	.fb_imageblit	= cfb_imageblit,
-	.fb_cursor	= soft_cursor,
+//	.fb_cursor	= soft_cursor,
 	.fb_open	= vfb2_open,
 	.fb_release	= vfb2_release,
 	.fb_mmap	= vfb2_mmap,

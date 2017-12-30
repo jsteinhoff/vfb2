@@ -12,7 +12,11 @@
  * with libusb).
  */
 
+#include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,15)
 #include <linux/config.h>
+#endif
+
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/errno.h>
@@ -109,8 +113,8 @@ static int uvfb2_mk_table(struct uvfb2_device *dev, int i)
 	return 0;
 }
 
-static int uvfb2_ioctl(struct inode *inode, struct file  *file,
-		       unsigned int  cmd, unsigned long arg)
+static int uvfb2_ioctl(struct inode *inode, struct file *file,
+		       unsigned int cmd, unsigned long arg)
 {
 	struct uvfb2_device *dev = (struct uvfb2_device *)file->private_data;
 	int i;
