@@ -1,4 +1,4 @@
-/*
+/****
  * User space interface to vfb2.c
  *
  *  Copyright (c) 2005 Jan Steinhoff <jan.steinhoff@uni-jena.de>
@@ -74,8 +74,8 @@ static int uvfb2_release(struct inode *inode, struct file *file)
 	return 0;
 }
 
-static int uvfb2_read(struct file *file, char __user *buf,
-		      size_t nbytes, loff_t *ppos)
+static ssize_t uvfb2_read(struct file *file, char *buf,
+			  size_t nbytes, loff_t *ppos)
 {
 	char *page = (char*) __get_free_page(GFP_KERNEL);
 	char *page_pos = page;
@@ -113,8 +113,8 @@ static int uvfb2_mk_table(struct uvfb2_device *dev, int i)
 	return 0;
 }
 
-static int uvfb2_ioctl(struct inode *inode, struct file *file,
-		       unsigned int cmd, unsigned long arg)
+/* TODO: is this save on 64bit? */
+static long uvfb2_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
 	struct uvfb2_device *dev = (struct uvfb2_device *)file->private_data;
 	int i;
@@ -198,7 +198,9 @@ struct file_operations uvfb2_fops = {
 	.open = uvfb2_open,
 	.release = uvfb2_release,
 	.read = uvfb2_read,
-	.ioctl = uvfb2_ioctl,
+	.unlocked_ioctl = uvfb2_ioctl,
+	.compat_ioctl = uvfb2_ioctl,
+//	.ioctl = uvfb2_ioctl,
 };
 
 static int __init uvfb2_init(void)
@@ -212,7 +214,7 @@ static int __init uvfb2_init(void)
 		err("can not create /proc/" UVFB2_DEVICE);
 		return -EPERM;
 	}
-	pentry->owner = THIS_MODULE;
+//	pentry->owner = THIS_MODULE;
 	pentry->proc_fops = &uvfb2_fops;
 	return 0;
 }

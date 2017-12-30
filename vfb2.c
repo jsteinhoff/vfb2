@@ -12,7 +12,7 @@
  * io-mapped (e.g. usb displays).
  * It is actually a virtual frame buffer, the display driver can send its
  * content periodically to the display, or only on demand.
- * 
+ *
  * based on drivers/video/vfb.c and drivers/usb/media/vicam.c (mmap function)
  */
 
@@ -37,7 +37,7 @@
 #include "vfb2.h"
 
 #if !defined(CONFIG_FB)
-#error : No frame buffer support. Compile kernel with CONFIG_FB. 
+#error : No frame buffer support. Compile kernel with CONFIG_FB.
 #endif
 #if !defined(CONFIG_FB_VESA)
 #warning : Make sure you have cfbfillrect, cfbcopyarea and cfbimgblt in the kernel or as modules (If unsure, compile kernel with CONFIG_FB_VESA).
@@ -47,12 +47,14 @@
 
 #define VFB2_PRESENT		1
 #define VFB2_NOT_PRESENT	0
+/* TODO: rename to VFB2_NOT_REGISTERED */
 #define VFB2_ERROR_ON_REGISTER	-1
 
 struct vfb2_device {
 	struct vfb2_init init;
 	int present;
 	int table_index;
+	/* TODO: use kref instead of open counter */
 	atomic_t open;
 	int current_mode;
 	void *videomemory;
@@ -73,7 +75,7 @@ static int vfb2_find_dev(struct vfb2_device *dev)
 
 	for (i=0; i<VFB2_MAX_DEVICES; i++)
 		if (vfb2_table[i] == dev) {
-			ret = i; 
+			ret = i;
 			break;
 		}
 
@@ -444,6 +446,7 @@ static struct fb_ops vfb2_ops = {
 	.fb_fillrect	= cfb_fillrect,
 	.fb_copyarea	= cfb_copyarea,
 	.fb_imageblit	= cfb_imageblit,
+	/* FIXME: Why did I comment this line? */
 //	.fb_cursor	= soft_cursor,
 	.fb_open	= vfb2_open,
 	.fb_release	= vfb2_release,
@@ -580,7 +583,7 @@ int vfb2_register(struct vfb2_init *init)
 	struct vfb2_device *dev;
 
 	if (!init || !init->mode_table)
-		return -EINVAL;	
+		return -EINVAL;
 
 	dev = vfb2_init_dev(init);
 	if (!dev)
@@ -628,6 +631,8 @@ int vfb2_register(struct vfb2_init *init)
 		goto error2;
 	}
 
+	/* FIXME: do not hold vfb2_table_sem, may lead to deadlock in console
+	 * code. Use kref to sync with vfb2_unregister. */
 	res = register_framebuffer(info);
 	if (!res) {
 		dev->present = VFB2_PRESENT;

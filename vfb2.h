@@ -14,7 +14,7 @@ struct vfb2_mode {
 	__u32 bpp;
 	__u32 visual;
 	__u8 transp_mode;
-	__u8 reserved[3]; 
+	__u8 reserved[3];
 };
 
 
